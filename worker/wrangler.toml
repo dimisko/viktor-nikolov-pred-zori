@@ -1,0 +1,15 @@
+name = "pred-zori-api"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Any OpenAI-compatible endpoint. Default: Google Gemini (free tier via Google AI Studio).
+BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+# Check your provider's docs for the current free model name.
+MODEL = "gemini-3.8-flash"
+MAX_TOKENS = "1500"
+# Comma-separated list of sites allowed to call this worker. Replace YOUR-USERNAME.
+ALLOWED_ORIGINS = "https://dimisko.github.io,http://localhost:8000"
+
+# The API key is NOT stored here. Set it as a secret:
+#   npx wrangler secret put API_KEY

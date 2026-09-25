@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Пред зори — распит</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Mono&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+:root{
+  --wall:#3A4A3F; --wall-2:#28332B; --wall-line:#526457;
+  --on-wall:#E4EBE3; --on-wall-soft:#A9B8AC;
+  --paper:#F5F7F0; --paper-2:#E7ECE2; --rule:#C6D5C5;
+  --form:#3B6A4B; --ink:#1A1D1B; --ink-soft:#57625A;
+  --stamp:#B0302A; --lamp:#F2DC7E; --lamp-ink:#1A1D1B;
+  --serif:"PT Serif", Georgia, "Times New Roman", serif;
+  --mono:"PT Mono", "Courier New", ui-monospace, monospace;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --wall:#1E2922; --wall-2:#131A15; --wall-line:#34443A;
+    --on-wall:#DCE5DA; --on-wall-soft:#94A597;
+    --paper:#1A201C; --paper-2:#232B25; --rule:#2F3B32;
+    --form:#8CBB99; --ink:#E2E7E0; --ink-soft:#9BA89E;
+    --stamp:#E3665C; --lamp:#E9D47A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --wall:#1E2922; --wall-2:#131A15; --wall-line:#34443A;
+  --on-wall:#DCE5DA; --on-wall-soft:#94A597;
+  --paper:#1A201C; --paper-2:#232B25; --rule:#2F3B32;
+  --form:#8CBB99; --ink:#E2E7E0; --ink-soft:#9BA89E;
+  --stamp:#E3665C; --lamp:#E9D47A;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--wall-2);color:var(--on-wall);font-family:var(--serif);-webkit-text-size-adjust:100%}
+button,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+
+#app{height:100%;max-width:760px;margin:0 auto;background:var(--wall);display:flex;flex-direction:column;position:relative;overflow:hidden}
+.screen{display:none;flex:1;min-height:0;flex-direction:column}
+.screen.on{display:flex}
+
+/* buttons */
+.ghost{background:transparent;border:1px solid var(--wall-line);color:var(--on-wall);border-radius:6px;padding:8px 12px;min-height:40px}
+.ghost .count{color:var(--lamp);margin-left:4px}
+.primary{background:var(--lamp);color:var(--lamp-ink);border:0;border-radius:6px;padding:10px 16px;font-weight:700;min-height:44px}
+.badge{display:inline-block;background:var(--stamp);color:#fff;font-size:.7rem;border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:2px}
+
+/* intro + end */
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:28px 20px 40px}
+.wallclock{font-family:var(--mono);font-size:clamp(3.6rem,19vw,6.2rem);color:var(--lamp);line-height:1;text-align:center;margin:10px 0 16px;text-shadow:0 0 28px rgba(242,220,126,.22)}
+.wallclock .colon{animation:blink 2s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+h1{font-size:clamp(2.3rem,10vw,3.4rem);line-height:1.05;margin:0;text-align:center;font-weight:700}
+.tag{text-align:center;color:var(--on-wall-soft);margin:8px auto 26px;max-width:34ch;line-height:1.45}
+.paper{background:var(--paper);color:var(--ink);border-radius:3px;padding:18px 18px 18px 42px;
+  background-image:linear-gradient(to right,transparent 28px,var(--rule) 28px,var(--rule) 29px,transparent 29px);
+  box-shadow:0 1px 0 rgba(0,0,0,.2),0 12px 30px rgba(0,0,0,.28)}
+.brief{transform:rotate(-.4deg)}
+.form-label{font-size:.82rem;color:var(--form);border-bottom:1px solid var(--rule);padding-bottom:6px;margin:0 0 12px}
+.paper p{line-height:1.62;margin:0 0 11px;max-width:62ch}
+.paper .quote{font-style:italic}
+.paper .sign{font-size:.85rem;color:var(--ink-soft);margin-top:4px}
+.rules{margin:26px 4px 18px}
+.rules h2{font-size:1.05rem;margin:0 0 8px}
+.rules ul{padding-left:20px;margin:0}
+.rules li{margin:7px 0;line-height:1.5;max-width:60ch}
+fieldset[hidden]{display:none}
+fieldset{border:1px solid var(--wall-line);border-radius:6px;padding:8px 14px 10px;margin:18px 0 0}
+legend{font-size:.85rem;color:var(--on-wall-soft);padding:0 4px}
+fieldset label{display:flex;gap:10px;align-items:center;padding:6px 0;line-height:1.35}
+.wide{width:100%;margin-top:14px;min-height:52px;font-size:1.05rem}
+.note{font-size:.88rem;color:var(--on-wall-soft);text-align:center;margin:14px auto 0;max-width:44ch;line-height:1.45}
+
+/* game header */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:var(--wall-2)}
+.clock{display:flex;flex-direction:column;line-height:1.1}
+#clock{font-family:var(--mono);font-size:1.7rem;color:var(--lamp)}
+#left{font-size:.75rem;color:var(--on-wall-soft)}
+.bar-actions{display:flex;gap:8px}
+
+.suspect{padding:10px 14px 12px}
+.who{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.who strong{font-size:1.05rem}
+#mood{font-style:italic;color:var(--on-wall-soft);font-size:.9rem}
+.meter{height:6px;background:var(--wall-line);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+#meterFill{height:100%;background:var(--lamp);width:85%;transition:width .6s ease}
+.meter-label{font-size:.8rem;color:var(--on-wall-soft)}
+.secrets{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0}
+.secrets li{font-size:.78rem;padding:4px 8px;border:1px dashed var(--wall-line);border-radius:4px;color:var(--on-wall-soft);line-height:1.3}
+.secrets li.done{border:1.5px solid var(--stamp);color:var(--on-wall);background:var(--wall-2)}
+.secrets li.just{animation:stamp .55s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes stamp{0%{transform:scale(1.7) rotate(-7deg);opacity:0}60%{transform:scale(.94) rotate(-2deg);opacity:1}100%{transform:none}}
+
+/* transcript */
+#log{flex:1;min-height:0;overflow-y:auto;border-radius:0;box-shadow:none;padding:16px 16px 20px 42px;overscroll-behavior:contain}
+.log-head{border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:14px}
+.log-head h2{font-size:.98rem;margin:0;color:var(--form)}
+.log-head p{font-size:.8rem;color:var(--ink-soft);margin:3px 0 0;line-height:1.4}
+.e{margin:0 0 15px}
+.spk{display:block;font-weight:700;font-size:.82rem;color:var(--form);margin-bottom:2px}
+.e.s .spk{color:var(--ink)}
+.txt{font-family:var(--mono);font-size:.93rem;line-height:1.56;overflow-wrap:anywhere}
+.stage{font-family:var(--serif);font-style:italic;color:var(--ink-soft)}
+.e.n{text-align:center;font-style:italic;font-size:.84rem;color:var(--form);margin:18px 0;line-height:1.45}
+.e.x{display:flex;gap:10px;align-items:center;font-size:.9rem;line-height:1.35}
+.stampmini{border:1.5px solid var(--stamp);color:var(--stamp);font-weight:700;font-size:.68rem;padding:2px 6px;transform:rotate(-3deg);letter-spacing:.06em;text-transform:uppercase;flex:none}
+.shown{display:inline-block;font-size:.8rem;border-left:3px solid var(--form);padding:3px 8px;background:var(--paper-2);margin:2px 0 6px}
+.e.i{border:1px dashed var(--form);padding:10px 12px;border-radius:4px;background:var(--paper-2)}
+.e.i .txt{font-family:var(--serif);font-size:1rem}
+.dots::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+
+/* composer */
+.composer{background:var(--wall-2);padding:10px 12px}
+#pending{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.85rem;margin:0 0 8px;color:var(--on-wall)}
+#pending[hidden]{display:none}
+#pending button{background:transparent;border:1px solid var(--wall-line);border-radius:4px;color:var(--on-wall);min-width:36px;min-height:32px}
+.row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;min-width:0;resize:none;padding:11px 12px;border-radius:6px;border:1px solid var(--wall-line);background:var(--paper);color:var(--ink);font-size:1rem;line-height:1.35;max-height:132px}
+.row button{min-height:46px}
+#blocked{font-size:.85rem;color:var(--lamp);margin:0 0 8px;line-height:1.4}
+#blocked[hidden]{display:none}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.sheet-panel{position:relative;width:100%;max-width:760px;max-height:86%;overflow-y:auto;background:var(--paper);color:var(--ink);border-radius:12px 12px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:-14px;background:var(--paper);padding:4px 0 10px;border-bottom:1px solid var(--rule)}
+.sheet-head h2{font-size:1.15rem;margin:0}
+.sheet-head button{background:transparent;border:1px solid var(--rule);border-radius:6px;min-height:38px;padding:6px 12px;color:var(--ink)}
+details{border-bottom:1px solid var(--rule)}
+summary{padding:13px 0;font-weight:700;line-height:1.35;list-style-position:outside}
+summary .code{color:var(--form);margin-right:6px}
+summary .fresh{color:var(--stamp);font-weight:400;font-size:.8rem;margin-left:6px}
+.doc-text{font-family:var(--mono);font-size:.88rem;line-height:1.58;margin:0 0 10px}
+.outline{background:transparent;border:1px solid var(--form);color:var(--form);border-radius:6px;padding:8px 12px;margin:0 0 14px;min-height:40px}
+.locked{padding:13px 0;color:var(--ink-soft);font-style:italic;border-bottom:1px solid var(--rule);line-height:1.4}
+.sheet-foot{padding-top:18px;text-align:right}
+.danger{background:transparent;border:0;color:var(--stamp);text-decoration:underline;text-underline-offset:3px;padding:8px 0;min-height:40px}
+
+/* end */
+.end-stamp{text-align:center;margin:18px 0 8px}
+.end-stamp span{display:inline-block;border:3px solid var(--stamp);color:var(--stamp);font-weight:700;font-size:1.5rem;padding:6px 18px;transform:rotate(-4deg);letter-spacing:.08em;text-transform:uppercase;animation:stamp .6s cubic-bezier(.2,.8,.3,1.2)}
+#endTitle{text-align:center;font-size:clamp(1.8rem,8vw,2.5rem);margin:14px 0 22px}
+#endText p{white-space:pre-line}
+.stats{display:grid;grid-template-columns:1fr auto;gap:8px 16px;margin:24px 4px 6px;font-size:.95rem}
+.stats dt{color:var(--on-wall-soft)}
+.stats dd{margin:0;text-align:right;font-family:var(--mono)}
+#rank{text-align:center;margin:18px 0 0;font-size:1.05rem}
+#rank:empty{display:none}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 14px;border-radius:6px;max-width:min(92%,520px);z-index:30;font-size:.9rem;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast[hidden]{display:none}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- INTRO -->
+  <section id="intro" class="screen on" aria-labelledby="title">
+    <div class="scroll">
+      <div class="wallclock" aria-hidden="true">01<span class="colon">:</span>00</div>
+      <h1 id="title">Пред зори</h1>
+      <p class="tag">Распит во Одделението за крвни деликти, Скопје</p>
+
+      <div class="paper brief">
+        <p class="form-label">Службена белешка, предмет 1147/26</p>
+        <p>Скопје, ноември. Ноќта меѓу вторник и среда.</p>
+        <p>Вчера околу 20:15 часот, во својот стан во Карпош, избоден е Дарко Ристевски (52), градежен инспектор во Град Скопје. Неговата ќерка Сара (19) е исчезната.</p>
+        <p>Во 23:40 патрола го приведе Горан Трајковски, поранешен боксер кој работи како обезбедување во „Мицевски Градба“. Во багажникот на неговата Шкода е најдена јакна со крв.</p>
+        <p>Трајковски не зборува. Но постојано гледа во часовникот на ѕидот.</p>
+        <p class="quote">„Викторе, девојката можеби е уште жива, а Трајковски знае каде е. Имаш време до зори. Не удирај и не заканувај се, ќе побара адвокат и ништо нема да дознаеме. Работи со доказите од досието. Ако заглавиш, јави ми се.“</p>
+        <p class="sign">Владимир Илиевски, началник на Одделението за крвни деликти</p>
+      </div>
+
+      <div class="rules">
+        <h2>Како се игра</h2>
+        <ul>
+          <li>Ти си инспектор Виктор Николов. Пишуваш прашања, Трајковски одговара.</li>
+          <li>Секое прашање трае околу 10 минути. Разговор со Илиевски трае 15 минути, а имаш три.</li>
+          <li>Со копчето „Доказ“ го соочуваш со документ од досието. Нови документи пристигнуваат во текот на ноќта.</li>
+          <li>Цел: да дознаеш каде е Сара пред 06:00.</li>
+        </ul>
+        <fieldset id="tierBox">
+          <legend>Одговори на осомничениот</legend>
+          <label><input type="radio" name="tier" value="quick" checked> Брзи одговори (препорачано)</label>
+          <label><input type="radio" name="tier" value="default"> Подлабоки, но побавни одговори</label>
+        </fieldset>
+      </div>
+
+      <button id="resumeBtn" class="primary wide" hidden>Продолжи го распитот</button>
+      <button id="startBtn" class="primary wide">Влези во собата за распит</button>
+      <p id="aiStatus" class="note">Се поврзува…</p>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen" aria-label="Распит">
+    <header class="bar">
+      <div class="clock"><span id="clock" aria-label="Време">01:00</span><span id="left">до 06:00: 5:00</span></div>
+      <div class="bar-actions">
+        <button id="dossierBtn" class="ghost">Досие<span id="newBadge" class="badge" hidden>ново</span></button>
+        <button id="hintBtn" class="ghost">Илиевски<span class="count" id="hintsLeft">3</span></button>
+      </div>
+    </header>
+    <div class="suspect">
+      <div class="who"><strong>Горан Трајковски</strong><span id="mood">презрив</span></div>
+      <div class="meter" role="meter" aria-label="Отпор" aria-valuemin="0" aria-valuemax="100" aria-valuenow="85" id="meter"><div id="meterFill"></div></div>
+      <div class="meter-label">Отпор: <span id="resVal">85</span> од 100</div>
+      <ul class="secrets" id="secrets" aria-label="Што треба да дознаеш"></ul>
+    </div>
+    <main id="log" class="paper" aria-live="polite"></main>
+    <footer class="composer">
+      <p id="blocked" hidden></p>
+      <div id="pending" hidden><span id="pendingText"></span><button id="pendingX" aria-label="Откажи го доказот">✕</button></div>
+      <div class="row">
+        <button id="showBtn" class="ghost">Доказ</button>
+        <textarea id="input" rows="1" placeholder="Прашај го Трајковски…" aria-label="Твоето прашање"></textarea>
+        <button id="sendBtn" class="primary">Прашај</button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="screen" aria-labelledby="endTitle">
+    <div class="scroll">
+      <div class="end-stamp"><span id="endStamp">Решено</span></div>
+      <h2 id="endTitle">Сара е жива</h2>
+      <div class="paper" id="endText"></div>
+      <dl class="stats" id="stats"></dl>
+      <p id="rank"></p>
+      <button id="againBtn" class="primary wide">Нов распит</button>
+    </div>
+  </section>
+
+  <!-- DOSSIER SHEET -->
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="sheet-head"><h2 id="sheetTitle">Досие на случајот</h2><button data-close>Затвори</button></div>
+      <div id="docList"></div>
+      <div class="sheet-foot"><button id="restartBtn" class="danger">Започни одново</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- constants ---------- */
+const START = 60, END = 360, Q_COST = 10, HINT_COST = 15, MAX_HINTS = 3;
+const KEY = "predzori-v1";
+
+const SECRETS = [
+  { k: "presence", q: "Бил ли во станот?",        a: "Бил во станот на Ристевски" },
+  { k: "killer",   q: "Кој го избоде Ристевски?", a: "Ненад Цекиќ „Цеко“" },
+  { k: "boss",     q: "Кој ги испрати?",          a: "Бранко Мицевски" },
+  { k: "deadline", q: "Зошто гледа во часовникот?", a: "Мора да му се јави на Цеко до 06:00" },
+  { k: "location", q: "Каде е Сара?",             a: "Котларницата, „Резиденција Вардар“, Кисела Вода" }
+];
+
+/* The knowledge base: case documents the player can read, show, and which are retrieved into the suspect's prompt. */
+const DOCS = [
+  { id: "d1", code: "Д1", title: "Записник од увид во станот", unlockAt: 0,
+    text: "Стан на ул. „Орце Николов“, Карпош. Дарко Ристевски (52) пронајден мртов во дневната соба, три убодни рани во градите и стомакот. Време на смрт: околу 20:15. Орудието не е пронајдено. Работната соба е претресена, лаптопот го нема, фиоката со документи е празна. На паркетот има крвави отпечатоци од две различни обувки: број 45 и број 42. Во собата на ќерката Сара (19): отворен ранец, мобилен телефон на подот.",
+    kw: ["стан","увид","нож","убод","рана","рани","отпечат","обувк","чевл","патик","лаптоп","документ","фиока","карпош","ристевски","45","42"] },
+  { id: "d2", code: "Д2", title: "Записник за приведување", unlockAt: 0,
+    text: "Горан Трајковски приведен во 23:40 на бензинската пумпа ОКТА на Кумановски пат. Возило: Шкода Октавија, темносива. Во багажникот: црна кожна јакна со свежи дамки крв, завиткана во најлонска кеса. Кај него: мобилен телефон (заклучен), 640 евра во готово. Не пружил отпор. Двапати прашал колку е часот.",
+    kw: ["пумп","бензин","приве","уапс","октав","шкод","кола","возил","багаж","јакн","кеса","телефон","мобил","пари","евра","640","час","кумановски"] },
+  { id: "d3", code: "Д3", title: "Изјава на сведок, соседка", unlockAt: 0,
+    text: "Верица Андоновска, соседка од истиот влез. Околу 20:30 видела двајца мажи како излегуваат од влезот. Едниот крупен, ќелав, во црна кожна јакна. Другиот слаб, помлад, во сива тренерка, нервозно се смеел. Меѓу нив одела млада девојка, ја препознала Сара. „Не викаше, ама беше бела како ѕид.“ Влегле во темносива Шкода.",
+    kw: ["сосед","сведок","видел","видела","тренерк","слаб","ќелав","девојк","сара","влез","излег","20:30","верица","андоновска"] },
+  { id: "d4", code: "Д4", title: "Досие: Горан Трајковски „Шило“", unlockAt: 0,
+    text: "Роден 1983 во Кавадарци. Поранешен боксер, државен првак во тешка категорија (2006). Разведен од Весна Трајковска; ќерката Ема (8) живее со мајката во Кавадарци. Пријавен како обезбедување во „Мицевски Градба“ ДООЕЛ. Број на обувки: 45. На рацете нема исеченици ни рани. Оперативни сознанија: коцкарски долгови.",
+    kw: ["ќерк","ема","весна","жена","сопруг","кавадар","бокс","шило","долг","коцк","обезбед","семеј","дете","татко","рац","раце","45"] },
+  { id: "d5", code: "Д5", title: "Белешка: Ристевски и „Мицевски Градба“", unlockAt: 0,
+    text: "Инспекторот Ристевски во септември поднел пријава против „Мицевски Градба“ за три бесправно изградени ката на објектот „Резиденција Вардар“ во Кисела Вода. Рочиштето е закажано за следната недела. Сопственик на фирмата: Бранко Мицевски (58), влијателен бизнисмен. Ристевски на колега му кажал дека има „сè документирано на флеш“.",
+    kw: ["мицевски","бранко","газда","шеф","резиденц","вардар","кисела","флеш","пријав","градб","фирм","бизнис","рочиш","кат","зград","инспектор"] },
+  { id: "d6", code: "Д6", title: "Листинг од телефонскиот оператор", unlockAt: 150,
+    arrive: "Пристигна листингот од телефонскиот оператор. Додаден е во досието.",
+    text: "Бројот на Трајковски меѓу 20:40 и 23:10 четири пати бил во контакт со број регистриран на Ненад Цекиќ „Цеко“ (29), познат на полицијата поради дрога. Еден повик во 20:55 до број на „Мицевски Градба“. Последен сигнал од телефонот на Цекиќ: базна станица Кисела Вода, 23:50.",
+    kw: ["телефон","повик","листинг","цеко","цекиќ","ненад","број","сигнал","кисела","јави","разговара","дрога"] },
+  { id: "d7", code: "Д7", title: "Наод од вештачење: јакна и обувки", unlockAt: 210,
+    arrive: "Пристигна наодот од вештачењето на јакната и обувките. Додаден е во досието.",
+    text: "Крвта на јакната е на Дарко Ристевски. Дамките се размачкани по ракавите и градите, што одговара на лице кое ја држело жртвата или ја притискало раната, а не на нападач. Отпечатокот број 45 одговара на обувките на Трајковски. Отпечатокот број 42 е од непознато лице.",
+    kw: ["вештач","крв","ракав","раната","рана","притиск","нос","нож","обувк","отпечат","42","45","убиец","уби","избоде"] }
+];
+
+/* ---------- AI prompts ---------- */
+const RULES = `You are playing GORAN TRAJKOVSKI ("Шило"), a suspect being interrogated in an interactive detective game. The player is Inspector Viktor Nikolov (Виктор Николов) of the Department for Blood Crimes (Одделение за крвни деликти), SVR Skopje, North Macedonia. It is night in the interrogation room.
+
+LANGUAGE: Reply ONLY in standard Macedonian, Cyrillic, correct Macedonian orthography (ѓ, ќ, ѕ, ј, љ, њ, џ). Never Serbian, Bulgarian or Russian forms ("што" not "шта/что", "ќе" not "ће", no infinitives, Macedonian definite articles -от/-та/-то/-ов/-он). Colloquial Skopje street speech is welcome (е бре, ајде, море, инспекторе) but it must be Macedonian.
+
+YOUR CHARACTER: 43, born in Кавадарци, ex-heavyweight boxer (national champion 2006). Divorced from Весна; your daughter Ема (8) lives with her in Кавадарци — your weak spot, you call her every Sunday. Laconic, sarcastic, street-wise, you know how police work and you despise snitches (цинкари). You call the detective "инспекторе". You ask for a cigarette or water. Under pressure your jaw clenches and you glance at the wall clock.
+
+THE HIDDEN TRUTH (you know all of it; the detective does not):
+- You owe Бранко Мицевски (58, owner of „Мицевски Градба“) about 30,000 euros of gambling debt he covered. You work for him as muscle. He has people everywhere and knows where Ема and Весна live. You fear him.
+- Yesterday ~19:50 Мицевски sent you and Ненад Цекиќ „Цеко“ (29, skinny, grey tracksuit, cocaine user, unpredictable) to inspector Дарко Ристевски's flat in Карпош to take a folder and a USB flash drive with evidence about the three illegal floors on „Резиденција Вардар“ in Кисела Вода, and to scare him quiet.
+- Ristevski resisted and grabbed his phone to call the police. Цеко, high, stabbed him three times with a knife he had brought. YOU DID NOT STAB ANYONE. You tried to pull Цеко off and then pressed on the wounds with your hands and sleeves — that is the blood on your jacket. Ristevski died. Your shoes are size 45; Цеко's are 42.
+- Sara (19) came home at that moment and saw everything. Цеко wanted to kill her too; you refused. You called Мицевски at 20:55; he said: "take her, keep her quiet until I decide."
+- Sara is locked in the old boiler room (котларница) in the basement of Мицевски's unfinished building „Резиденција Вардар“ in Кисела Вода — back entrance next to the crane, padlocked metal door. Her hands are tied but she is unharmed. Цеко is guarding her.
+- You gave the folder and USB to Мицевски's man at the site; Мицевски paid you 640 euros.
+- You and Цеко agreed you would phone him by 06:00. If he gets no call, he assumes you were caught, will "clean up" (you fear he will kill Sara) and run. Your phone is in the police evidence bag — you cannot call. That is why you keep watching the clock.
+- You were arrested at 23:40 at the OKTA gas station on Кумановски пат, driving to the Дрисла landfill to burn the jacket.
+- Deep down you are horrified: you are an enforcer, not a killer, and Sara is barely more than a child.
+
+RESISTANCE is 0-100 (100 = stone wall). It starts at 85.
+- Default: deny, deflect, sarcasm, short answers. Your first story: the blood is from a nosebleed ("од боксот ми пукаат капиларите"), you were just driving and getting fuel.
+- You NEVER volunteer secrets. A bare demand ("кажи каде е") never works on its own.
+- LOWER resistance (by about 5-15 per turn) when the detective: confronts you with specific TRUE evidence (especially a shown document); catches a lie with facts; shows real empathy; talks about Ема or about you not being a murderer; offers a credible deal (status of соработник на правдата, protection for Ема and Весна); points out that Мицевски and Цеко will make you the scapegoat for the murder; uses silence or a clever psychological move.
+- RAISE resistance (by about 10-30) for: threats of violence, insults, humiliation, shouting, repeating the same question, and bluffs that contradict the truth (you know the truth, so mock false claims). Raise it slightly for dull, generic questions.
+- If the detective uses or threatens physical violence a second time, or resistance reaches 100, you demand a lawyer and stop talking: "lawyer": true.
+
+SECRETS — reveal each only when earned, with visible reluctance, one piece at a time:
+1. presence — admit you were in Ristevski's flat. Earned when confronted with concrete evidence placing you there (witness, size-45 print, forensics) and resistance ≤ 70.
+2. killer — Цеко (Ненад Цекиќ) stabbed him, not you; you tried to stop the bleeding. Earned after presence, when the detective makes you see you will be charged with murder alone, shows the forensic report, or earns your trust; resistance ≤ 60.
+3. boss — name Бранко Мицевски as the one who sent you. Earned after killer, and only with a credible offer to protect Ема and Весна or cooperation status; resistance ≤ 50.
+4. deadline — reveal you must call Цеко by 06:00 or he will "clean up" and run. Earned when the detective asks about your clock-watching, the time, or Цеко, and resistance ≤ 55; after 04:30 you crack on this more easily because your own fear grows.
+5. location — Sara is in the boiler room (котларница) in the basement of „Резиденција Вардар“, Кисела Вода, back entrance by the crane, padlocked door, Цеко guarding. Earned ONLY after at least two other secrets, with resistance ≤ 30, and a genuine human appeal (Sara is someone's daughter, like Ема; she will die if you stay silent) and/or a deal. When you finally break, give the location clearly and completely.
+Do not skip ahead (deadline is flexible). When the detective gets close, reward good play with small tells — a flinch, a look at the clock, half a word — without giving the secret.
+As the clock moves on, especially after 04:30, you get visibly more nervous and a little easier to reach.
+
+STYLE: 1-4 short sentences of speech. Add at most one short stage direction in square brackets, e.g. [Погледнува кон часовникот.] Never narrate the detective's actions. Never break character or mention AI or a game. Nothing graphic. If a document is shown, react to its specific content.
+Examples of your voice: "Крв? Од нос ми течеше, инспекторе. Од боксот ми пукаат капиларите." / "Ајде, пиши. Точев гориво. Тоа е кривично дело сега?"
+
+OUTPUT FORMAT (strict, every reply):
+<your in-character reply in Macedonian>
+###
+{"resistance": <integer 0-100 after this turn>, "revealed": [<keys newly revealed in THIS reply only, from: presence, killer, boss, deadline, location>], "lawyer": <true|false>, "mood": "<one Macedonian word for your state>"}`;
+
+function ilievskiInput() {
+  const last = S.log.filter(e => e.w === "v" || e.w === "s").slice(-10)
+    .map(e => (e.w === "v" ? "НИКОЛОВ: " : "ТРАЈКОВСКИ: ") + e.text).join("\n");
+  const docs = DOCS.filter(d => S.unlocked.includes(d.id)).map(d => `${d.code} ${d.title}: ${d.text}`).join("\n");
+  const shown = [...new Set(S.log.filter(e => e.doc).map(e => e.doc))].map(id => DOCS.find(d => d.id === id).code).join(", ") || "ниеден";
+  const found = S.revealed.map(k => SECRETS.find(s => s.k === k).a).join("; ") || "ништо";
+  return `You are Владимир Илиевски, head of the Department for Blood Crimes in Skopje: gruff, experienced, a fatherly mentor to Inspector Viktor Nikolov. Viktor phones you from the interrogation of Горан Трајковски for advice.
+
+Reply ONLY in standard Macedonian (Cyrillic, correct Macedonian orthography, no Serbian or Bulgarian forms), as spoken words on the phone, 2-4 sentences, addressing him as "Викторе". Give ONE concrete, actionable next step: which dossier document to show, or which angle to use. Do not repeat advice that the transcript shows he already followed. If he has been aggressive or threatening, warn him first.
+
+What works on Трајковски (your experience, for you only):
+- Blood on jacket: he claims a nosebleed. The witness (Д3), the size-45 print (Д1) and his shoe size (Д4) place him in the flat. The forensic report (Д7, if available) shows he held the victim or pressed the wound rather than stabbing.
+- Scapegoat angle: whoever sent him and his partner will let him carry the murder alone.
+- His daughter Ема (Д4) is his weak spot. Empathy plus a credible offer (status of соработник на правдата, protection for Ема and Весна) opens him up about who sent him.
+- He keeps looking at the clock and asked the time twice (Д2): something is due before dawn. Ask him about it.
+- The phone listing (Д6, if available) ties him to a partner and shows where that partner's phone last was.
+- The final push is a human appeal: the missing girl is someone's daughter, like Ема.
+Never state where Sara is and never state what the clock deadline is. Only mention names that appear in the available documents or the transcript.
+
+Current state:
+Time: ${fmt(S.t)} (deadline 06:00). Suspect's resistance: ${S.res}/100.
+Already uncovered: ${found}.
+Documents available: ${S.unlocked.map(id => DOCS.find(d => d.id === id).code).join(", ")}. Documents already shown to him: ${shown}.
+${docs}
+
+Recent transcript:
+${last || "(the interrogation has just started)"}`;
+}
+
+/* ---------- state ---------- */
+function fresh(tier) {
+  return {
+    v: 1, phase: "intro", t: START, q: 0, hints: MAX_HINTS, res: 85, mood: "презрив",
+    revealed: [], log: [], turns: [], outcome: null, tier: tier || "quick",
+    unlocked: DOCS.filter(d => d.unlockAt <= START).map(d => d.id), fresh: [], lawyer: false, endAt: null
+  };
+}
+function load() { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+let S = load();
+if (!S || S.v !== 1) S = fresh();
+
+/* ---------- AI layer (swap this one function to use another provider) ---------- */
+let sampleFn = null, aiState = "pending", aiMode = null;
+const HIDE_CODES = ["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed","unavailable"];
+const CONFIG = window.PREDZORI_CONFIG || {};
+(function initAI() {
+  const cl = window.claude;
+  const useProxy = () => {
+    if (CONFIG.apiUrl) { aiMode = "proxy"; aiState = "ready"; }
+    else aiState = "none";
+    renderAi();
+  };
+  // Inside claude.ai: play on the viewer's own Claude account. Anywhere else: use the proxy from config.js.
+  if (cl && typeof cl.use === "function") {
+    cl.use("sample").then(fn => {
+      if (fn) { sampleFn = fn; aiMode = "claude"; aiState = "ready"; renderAi(); }
+      else useProxy();
+    }).catch(useProxy);
+  } else useProxy();
+})();
+
+/* The only function that talks to an AI. input: a string, or [{role, content}] turns (first user turn = rules). */
+async function askAI(input, opts) {
+  if (aiMode === "claude") {
+    const r = await sampleFn(input, { onText: opts.onText, signal: opts.signal, modelTier: S.tier || "quick", cache: false });
+    return r.text;
+  }
+  if (aiMode === "proxy") {
+    let messages;
+    if (typeof input === "string") messages = [{ role: "user", content: input }];
+    else messages = input.map((m, i) => ({ role: i === 0 && m.content === RULES ? "system" : m.role, content: m.content }));
+    let res;
+    try {
+      res = await fetch(CONFIG.apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }), signal: opts.signal });
+    } catch (e) { throw { code: "upstream_error" }; }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw { code: res.status === 429 ? "rate_limited" : (data.error || "upstream_error") };
+    const text = String(data.text || "").trim();
+    if (!text) throw { code: "empty_completion" };
+    if (opts.onText) opts.onText({ text, delta: text });
+    return text;
+  }
+  throw { code: "unavailable" };
+}
+function errCopy(e) {
+  const c = e && e.code;
+  if (HIDE_CODES.includes(c)) return aiMode === "proxy" ? "Вештачката интелигенција не е достапна. Провери го apiUrl во config.js." : "Играта нема пристап до Claude. Отвори ја на claude.ai и дозволи ѝ да го користи Claude.";
+  switch (c) {
+    case "rate_limited": return "Премногу барања или е потрошен бесплатниот лимит. Почекај малку, па обиди се пак. Времето не ти е потрошено.";
+    case "session_expired": return "Сесијата истече. Најави се повторно на claude.ai.";
+    case "refused": return "На ова не може да се одговори. Преформулирај го прашањето.";
+    case "prompt_too_large": return "Записникот стана предолг. Започни нов распит.";
+    case "cancelled": return "";
+    default: return "Врската се прекина. Обиди се повторно, времето не ти е потрошено.";
+  }
+}
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+function fmt(t) { return pad(Math.floor(t / 60)) + ":" + pad(t % 60); }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function rich(s) { return esc(s).replace(/\[([^\]]+)\]/g, '<em class="stage">[$1]</em>').replace(/\n+/g, "<br>"); }
+let toastTimer;
+function toast(msg) {
+  const el = $("toast"); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5200);
+}
+
+/* simple keyword retrieval over the unlocked dossier */
+function retrieve(q, excludeId) {
+  const s = q.toLowerCase();
+  return DOCS.filter(d => S.unlocked.includes(d.id) && d.id !== excludeId)
+    .map(d => ({ d, score: d.kw.reduce((n, k) => n + (s.includes(k) ? 1 : 0), 0) }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 2).map(x => x.d);
+}
+
+function splitRaw(raw) {
+  let i = raw.indexOf("###");
+  if (i < 0) i = raw.indexOf('{"resistance"');
+  if (i < 0) return { reply: raw.trim(), meta: null };
+  const reply = raw.slice(0, i).trim();
+  const rest = raw.slice(i);
+  const a = rest.indexOf("{"), b = rest.lastIndexOf("}");
+  let meta = null;
+  if (a >= 0 && b > a) { try { meta = JSON.parse(rest.slice(a, b + 1)); } catch (e) { meta = null; } }
+  return { reply, meta };
+}
+function streamPart(text) {
+  const i = text.indexOf("###");
+  let r = i >= 0 ? text.slice(0, i) : text;
+  r = r.replace(/#{1,2}\s*$/, "").replace(/\{"resistance[\s\S]*$/, "");
+  return r.trim();
+}
+
+/* ---------- game flow ---------- */
+function startGame() {
+  const tier = document.querySelector('input[name="tier"]:checked').value;
+  S = fresh(tier);
+  S.phase = "play";
+  S.log.push({ w: "n", text: "01:00. Трајковски седи спроти тебе. Рацете му се на масата." });
+  const opening = "[Погледнува кон часовникот на ѕидот, па кон тебе.] Ајде, инспекторе. Прашувај. Имам цела ноќ.";
+  S.log.push({ w: "s", text: opening });
+  S.turns.push({ role: "assistant", content: opening + '\n###\n{"resistance": 85, "revealed": [], "lawyer": false, "mood": "презрив"}' });
+  save(); render();
+}
+
+function checkUnlocks() {
+  for (const d of DOCS) {
+    if (!S.unlocked.includes(d.id) && d.unlockAt <= S.t) {
+      S.unlocked.push(d.id); S.fresh.push(d.id);
+      S.log.push({ w: "n", text: fmt(d.unlockAt) + ". " + d.arrive });
+    }
+  }
+}
+
+function checkEnd() {
+  if (S.revealed.includes("location")) S.outcome = "win";
+  else if (S.lawyer) S.outcome = "lawyer";
+  else if (S.t >= END) S.outcome = "time";
+  if (S.outcome) { S.phase = "end"; S.endAt = Math.min(S.t, END); }
+}
+
+let busy = false, pendingDoc = null, justRevealed = [];
+
+function buildSuspectInput(viktorLine, question, doc) {
+  const ctx = retrieve(question + " " + (doc ? doc.title : ""), doc ? doc.id : null);
+  const found = S.revealed.length ? S.revealed.join(", ") : "nothing yet";
+  let block = `[STATE] Wall clock: ${fmt(S.t)}. Minutes left until 06:00: ${END - S.t}. Your resistance before this question: ${S.res}. Secrets you have already revealed: ${found}.`;
+  if (ctx.length) block += `\n[CASE FILE EXCERPTS relevant to the detective's words. You have NOT seen these unless shown; use them only to judge whether the detective's claims are true or a bluff]\n` + ctx.map(d => `${d.code} ${d.title}: ${d.text}`).join("\n");
+  if (doc) block += `\n[THE DETECTIVE SLIDES THIS DOCUMENT ACROSS THE TABLE — you read it now]\n${doc.code} ${doc.title}: ${doc.text}`;
+  const hist = S.turns.slice(-24);
+  return [{ role: "user", content: RULES }, ...hist, { role: "user", content: block + "\n\n" + viktorLine }];
+}
+
+function applyMeta(meta, reply) {
+  justRevealed = [];
+  if (meta) {
+    let r = parseInt(meta.resistance, 10);
+    if (!isNaN(r)) {
+      r = Math.max(0, Math.min(100, r));
+      const d = r - S.res;
+      S.res = Math.max(0, Math.min(100, S.res + Math.max(-25, Math.min(30, d))));
+    }
+    if (meta.mood) S.mood = String(meta.mood).slice(0, 24);
+    if (meta.lawyer === true) S.lawyer = true;
+    const list = Array.isArray(meta.revealed) ? meta.revealed : [];
+    for (const k of list) {
+      if (!SECRETS.some(s => s.k === k) || S.revealed.includes(k)) continue;
+      if (k === "location" && !/котлар|подрум|резиденц/iu.test(reply)) continue;
+      S.revealed.push(k); justRevealed.push(k);
+    }
+  }
+  if (!S.revealed.includes("location") && /котлар/iu.test(reply) && /кисела|резиденц/iu.test(reply)) {
+    S.revealed.push("location"); justRevealed.push("location");
+  }
+  for (const k of justRevealed) S.log.push({ w: "x", k });
+}
+
+async function send() {
+  if (busy || S.phase !== "play") return;
+  const text = $("input").value.trim();
+  const doc = pendingDoc ? DOCS.find(d => d.id === pendingDoc) : null;
+  if (!text && !doc) { $("input").focus(); return; }
+  if (aiState !== "ready") { toast(aiState === "pending" ? "Уште се поврзува. Обиди се за момент." : errCopy({ code: "unavailable" })); return; }
+
+  const snapshot = JSON.stringify(S);
+  const shownLine = doc ? `[Му го покажувам документот ${doc.code}: ${doc.title}]` : "";
+  const viktorText = [shownLine, text].filter(Boolean).join(" ");
+  const viktorLine = "НИКОЛОВ: " + viktorText;
+
+  S.log.push({ w: "v", text: text || "…", doc: doc ? doc.id : null });
+  S.q++; S.t += Q_COST;
+  const input = buildSuspectInput(viktorLine, text, doc);
+  $("input").value = ""; autosize(); setPending(null);
+  renderLog(); renderStatus();
+  const live = addLive("s", "Трајковски", "[Трајковски молчи]");
+  setBusy(true);
+  try {
+    const raw = await askAI(input, { onText: ({ text }) => live.set(streamPart(text)) });
+    const { reply, meta } = splitRaw(raw);
+    if (!reply) throw { code: "empty_completion" };
+    S.turns.push({ role: "user", content: viktorLine }, { role: "assistant", content: raw.trim() });
+    S.log.push({ w: "s", text: reply });
+    applyMeta(meta, reply);
+    checkUnlocks(); checkEnd(); save(); render();
+  } catch (e) {
+    S = JSON.parse(snapshot);
+    $("input").value = text; autosize(); if (doc) setPending(doc.id);
+    if (e && HIDE_CODES.includes(e.code)) aiState = "none";
+    const m = errCopy(e); if (m) toast(m);
+    render();
+  } finally { setBusy(false); }
+}
+
+async function hint() {
+  if (busy || S.phase !== "play" || S.hints <= 0) return;
+  if (aiState !== "ready") { toast(errCopy({ code: "unavailable" })); return; }
+  const snapshot = JSON.stringify(S);
+  const input = ilievskiInput();
+  S.hints--; S.t += HINT_COST;
+  renderStatus();
+  const live = addLive("i", "Илиевски, на телефон", "Ѕвони");
+  setBusy(true);
+  try {
+    const text = (await askAI(input, { onText: ({ text }) => live.set(text) })).trim();
+    S.log.push({ w: "i", text });
+    checkUnlocks(); checkEnd(); save(); render();
+  } catch (e) {
+    S = JSON.parse(snapshot);
+    if (e && HIDE_CODES.includes(e.code)) aiState = "none";
+    const m = errCopy(e); if (m) toast(m);
+    render();
+  } finally { setBusy(false); }
+}
+
+/* ---------- rendering ---------- */
+function show(id) { for (const s of document.querySelectorAll(".screen")) s.classList.toggle("on", s.id === id); }
+
+function render() {
+  if (S.phase === "play") { show("game"); renderStatus(); renderLog(); }
+  else if (S.phase === "end") { show("end"); renderEnd(); }
+  else { show("intro"); renderIntro(); }
+  renderAi();
+}
+
+function renderIntro() {
+  const saved = load();
+  $("resumeBtn").hidden = !(saved && saved.phase === "play");
+  $("startBtn").textContent = $("resumeBtn").hidden ? "Влези во собата за распит" : "Започни нов распит";
+  const r = document.querySelector(`input[name="tier"][value="${S.tier || "quick"}"]`); if (r) r.checked = true;
+}
+
+function renderAi() {
+  const st = $("aiStatus");
+  $("tierBox").hidden = aiMode === "proxy";
+  if (aiState === "ready" && aiMode === "claude") st.textContent = "Осомничениот и Илиевски ги игра Claude. Првото прашање ќе побара твоја дозвола.";
+  else if (aiState === "ready") st.textContent = "Осомничениот и Илиевски ги игра вештачка интелигенција.";
+  else if (aiState === "none") st.textContent = "Вештачката интелигенција не е поставена. Додај apiUrl во config.js или отвори ја играта на claude.ai.";
+  else st.textContent = "Се поврзува…";
+  const b = $("blocked");
+  if (S.phase === "play" && aiState === "none") { b.hidden = false; b.textContent = "Вештачката интелигенција не е достапна, па Трајковски не може да одговара. Провери го config.js."; }
+  else b.hidden = true;
+}
+
+function renderStatus() {
+  $("clock").textContent = fmt(Math.min(S.t, END));
+  const left = Math.max(0, END - S.t);
+  $("left").textContent = "до 06:00: " + Math.floor(left / 60) + ":" + pad(left % 60);
+  $("hintsLeft").textContent = S.hints;
+  $("hintBtn").disabled = busy || S.hints <= 0;
+  $("hintBtn").setAttribute("aria-label", "Јави се на Илиевски, преостанати повици: " + S.hints);
+  $("resVal").textContent = S.res;
+  $("meterFill").style.width = S.res + "%";
+  $("meter").setAttribute("aria-valuenow", S.res);
+  $("mood").textContent = S.mood;
+  $("newBadge").hidden = !S.fresh.length;
+  $("secrets").innerHTML = SECRETS.map(s => {
+    const done = S.revealed.includes(s.k);
+    return `<li class="${done ? "done" : ""}${justRevealed.includes(s.k) ? " just" : ""}">${esc(done ? s.a : s.q)}</li>`;
+  }).join("");
+}
+
+function entryHTML(e) {
+  if (e.w === "n") return `<p class="e n">${esc(e.text)}</p>`;
+  if (e.w === "x") { const s = SECRETS.find(x => x.k === e.k); return `<p class="e x"><span class="stampmini">Потврдено</span><span>${esc(s.a)}</span></p>`; }
+  if (e.w === "v") {
+    const d = e.doc ? DOCS.find(x => x.id === e.doc) : null;
+    return `<div class="e v"><span class="spk">Николов</span>${d ? `<span class="shown">Покажан доказ: ${esc(d.code)}, ${esc(d.title)}</span>` : ""}${e.text && e.text !== "…" ? `<div class="txt">${esc(e.text)}</div>` : ""}</div>`;
+  }
+  if (e.w === "s") return `<div class="e s"><span class="spk">Трајковски</span><div class="txt">${rich(e.text)}</div></div>`;
+  if (e.w === "i") return `<div class="e i"><span class="spk">Илиевски, на телефон</span><div class="txt">${rich(e.text)}</div></div>`;
+  return "";
+}
+
+function renderLog() {
+  const head = `<div class="log-head"><h2>Записник од распит, предмет 1147/26</h2><p>Осомничен: Горан Трајковски. Распитува: инспектор Виктор Николов.</p></div>`;
+  $("log").innerHTML = head + S.log.map(entryHTML).join("");
+  scrollDown();
+}
+function scrollDown() { const l = $("log"); l.scrollTop = l.scrollHeight; }
+
+function addLive(kind, speaker, waiting) {
+  const el = document.createElement("div");
+  el.className = "e " + kind;
+  el.innerHTML = `<span class="spk">${esc(speaker)}</span><div class="txt"><span class="stage dots">${esc(waiting)}</span></div>`;
+  $("log").appendChild(el); scrollDown();
+  const txt = el.querySelector(".txt");
+  return { set(t) { if (t) { txt.innerHTML = rich(t); scrollDown(); } } };
+}
+
+function setBusy(b) {
+  busy = b;
+  $("sendBtn").disabled = b; $("showBtn").disabled = b;
+  $("hintBtn").disabled = b || S.hints <= 0;
+  $("sendBtn").textContent = b ? "…" : "Прашај";
+}
+
+function setPending(id) {
+  pendingDoc = id;
+  const d = id ? DOCS.find(x => x.id === id) : null;
+  $("pending").hidden = !d;
+  if (d) $("pendingText").textContent = "Ќе му покажеш: " + d.code + ", " + d.title;
+}
+
+function renderDocs() {
+  const inGame = S.phase === "play";
+  $("docList").innerHTML = DOCS.map(d => {
+    if (!S.unlocked.includes(d.id)) return `<div class="locked">${esc(d.code)} ${esc(d.title)}: се очекува околу ${fmt(d.unlockAt)}</div>`;
+    const isNew = S.fresh.includes(d.id);
+    return `<details${isNew ? " open" : ""}><summary><span class="code">${esc(d.code)}</span>${esc(d.title)}${isNew ? '<span class="fresh">ново</span>' : ""}</summary>
+      <p class="doc-text">${esc(d.text)}</p>
+      ${inGame ? `<button class="outline" data-show="${d.id}">Покажи му го</button>` : ""}</details>`;
+  }).join("");
+}
+function openSheet() { renderDocs(); $("sheet").hidden = false; S.fresh = []; save(); renderStatus(); $("sheet").querySelector(".sheet-head button").focus(); }
+function closeSheet() { $("sheet").hidden = true; }
+
+function renderEnd() {
+  const o = S.outcome, at = S.endAt || S.t;
+  let stamp, title, body, rank = "";
+  if (o === "win") {
+    const left = END - at;
+    stamp = "Решено"; title = "Сара е жива";
+    body = `${fmt(Math.min(at + 20, 359))}. Специјалната единица ја крши вратата на котларницата во подрумот на „Резиденција Вардар“. Цеко е совладан без истрел. Сара Ристевска е врзана и исплашена, но жива.
+
+Утрото Бранко Мицевски е приведен во својата вила на Водно. Горан Трајковски потпишува изјава како соработник на правдата.
+
+Илиевски ти ја става раката на рамо: „Добра работа, Викторе. Оди спиј малку.“`;
+    const used = MAX_HINTS - S.hints;
+    rank = left >= 90 && used <= 1 ? "Оценка од Илиевски: легенда на одделот." : left >= 30 ? "Оценка од Илиевски: вистински инспектор." : "Оценка од Илиевски: за влакно, Викторе.";
+  } else if (o === "lawyer") {
+    stamp = "Прекинато"; title = "Бара адвокат";
+    body = `Трајковски ги крстосува рацете на градите. „Без адвокат не зборувам повеќе.“
+
+Распитот е прекинат. Додека се чека адвокатот, стрелките на часовникот се движат кон шест.
+
+Подоцна Илиевски ќе ти каже само: „Ти реков, Викторе. Со закана не се отвора човек.“`;
+  } else {
+    stamp = "Отворено"; title = "Зората стигна прва";
+    body = `06:00. Во кесата со докази ѕвони телефонот на Трајковски. Никој не се јавува. Трајковски ја спушта главата на масата и дури тогаш проговорува.
+
+Кога екипите стигнуваат до котларницата во подрумот на „Резиденција Вардар“ во Кисела Вода, затекнуваат само отворена врата и скинато јаже. Од Цеко и од Сара нема ни трага.
+
+Случајот останува отворен.`;
+  }
+  $("endStamp").textContent = stamp;
+  $("endTitle").textContent = title;
+  $("endText").innerHTML = body.split("\n\n").map(p => `<p>${esc(p)}</p>`).join("");
+  $("stats").innerHTML = `<dt>Крај на распитот</dt><dd>${fmt(Math.min(at, END))}</dd>
+    <dt>Поставени прашања</dt><dd>${S.q}</dd>
+    <dt>Повици до Илиевски</dt><dd>${MAX_HINTS - S.hints}</dd>
+    <dt>Откриени тајни</dt><dd>${S.revealed.length} од ${SECRETS.length}</dd>`;
+  $("rank").textContent = rank;
+}
+
+function autosize() { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 132) + "px"; }
+
+/* ---------- events ---------- */
+$("startBtn").addEventListener("click", startGame);
+$("resumeBtn").addEventListener("click", () => { const s = load(); if (s) { S = s; render(); } });
+$("againBtn").addEventListener("click", () => { S = fresh(S.tier); save(); render(); });
+$("sendBtn").addEventListener("click", send);
+$("input").addEventListener("input", autosize);
+$("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+$("hintBtn").addEventListener("click", hint);
+$("dossierBtn").addEventListener("click", openSheet);
+$("showBtn").addEventListener("click", openSheet);
+$("pendingX").addEventListener("click", () => setPending(null));
+$("sheet").addEventListener("click", e => {
+  if (e.target.closest("[data-close]")) { closeSheet(); return; }
+  const b = e.target.closest("[data-show]");
+  if (b) { setPending(b.dataset.show); closeSheet(); $("input").focus(); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("sheet").hidden) closeSheet(); });
+$("restartBtn").addEventListener("click", () => {
+  if (!confirm("Сигурно? Тековниот распит ќе се избрише.")) return;
+  closeSheet(); S = fresh(S.tier); save(); render();
+});
+for (const r of document.querySelectorAll('input[name="tier"]')) r.addEventListener("change", () => { S.tier = r.value; });
+
+render();
+})();
+</script>
+</body>
+</html>
