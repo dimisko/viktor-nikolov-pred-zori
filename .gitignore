@@ -3,3 +3,11 @@ node_modules/
 .dev.vars
 .DS_Store
 *.log
+
+# IDE (JetBrains)
+.idea/
+*.iml
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini

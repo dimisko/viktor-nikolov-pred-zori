@@ -269,6 +269,9 @@ summary .fresh{color:var(--stamp);font-weight:400;font-size:.8rem;margin-left:6p
 /* ---------- constants ---------- */
 const START = 60, END = 360, Q_COST = 10, HINT_COST = 15, MAX_HINTS = 3;
 const KEY = "predzori-v1";
+// Declared early: initAI() renders synchronously in proxy mode, before the helpers section runs.
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
 
 const SECRETS = [
   { k: "presence", q: "Бил ли во станот?",        a: "Бил во станот на Ристевски" },
@@ -446,8 +449,6 @@ function errCopy(e) {
 }
 
 /* ---------- helpers ---------- */
-const $ = id => document.getElementById(id);
-const pad = n => String(n).padStart(2, "0");
 function fmt(t) { return pad(Math.floor(t / 60)) + ":" + pad(t % 60); }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function rich(s) { return esc(s).replace(/\[([^\]]+)\]/g, '<em class="stage">[$1]</em>').replace(/\n+/g, "<br>"); }

@@ -43,21 +43,12 @@ export default {
       content: String((m && m.content) || "").slice(0, 30_000),
     }));
 
-    let upstream;
-    try {
-      upstream = await fetch(`${env.BASE_URL.replace(/\/$/, "")}/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.API_KEY}` },
-        body: JSON.stringify({
-          model: env.MODEL,
-          messages: clean,
-          temperature: 0.8,
-          max_tokens: Number(env.MAX_TOKENS || 1500),
-        }),
-      });
-    } catch {
-      return reply({ error: "upstream_error" }, 502, cors);
+    let upstream = await complete(env, env.MODEL, clean);
+    // Busy or rate-limited main model: retry once with the fallback model, if one is set.
+    if (env.FALLBACK_MODEL && (!upstream || upstream.status === 429 || upstream.status >= 500)) {
+      upstream = await complete(env, env.FALLBACK_MODEL, clean);
     }
+    if (!upstream) return reply({ error: "upstream_error" }, 502, cors);
 
     if (!upstream.ok) {
       const limited = upstream.status === 429;
@@ -70,6 +61,23 @@ export default {
     return reply({ text }, 200, cors);
   },
 };
+
+async function complete(env, model, messages) {
+  try {
+    return await fetch(`${env.BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.API_KEY}` },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: 0.8,
+        max_tokens: Number(env.MAX_TOKENS || 1500),
+      }),
+    });
+  } catch {
+    return null;
+  }
+}
 
 function reply(obj, status, headers) {
   return new Response(JSON.stringify(obj), {
