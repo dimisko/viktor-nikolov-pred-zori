@@ -15,6 +15,10 @@ Guidance for Claude Code sessions working on this repository.
 
 ```
 index.html              the whole game (~776 lines): CSS (lines ~11-170), markup (~173-263), JS IIFE (~265-773)
+manifest.webmanifest    PWA manifest (name, colors, icons)
+sw.js                   network-first service worker so the game is installable and opens offline
+icons/                  icon.svg (favicon: lamp over a suspect), icon-maskable.svg, and PNGs rendered from them
+og-image.png            1200x630 social preview referenced by the og:/twitter: tags
 config.js               window.PREDZORI_CONFIG = { apiUrl: "" }, the Worker URL for non-claude.ai hosting
 worker/src/index.js     Cloudflare Worker: CORS allowlist, validation, forwards to {BASE_URL}/chat/completions
 worker/wrangler.toml    BASE_URL (default Gemini OpenAI-compat), MODEL, MAX_TOKENS, ALLOWED_ORIGINS
@@ -71,4 +75,5 @@ Everything lives in one `"use strict"` IIFE. Main pieces, top to bottom:
 - The tier radio box is hidden in proxy mode, where the model is fixed by the Worker's `MODEL`.
 - **Story consistency:** the facts in `DOCS`, `RULES`, `ilievskiInput()`, the intro brief (markup around line 182) and the endings in `renderEnd()` all describe the same case. When you change a name, time, place or clue, update all of them.
 - **Adding a secret:** add it to `SECRETS`, add its reveal condition and its key to the `revealed` list in the RULES output format, and add any advice about it to `ilievskiInput()`.
+- **PWA / sharing:** `initPWA()` registers `sw.js` and shows the install popup (`#install`) only outside an iframe, so it never runs inside a claude.ai artifact. Chromium gets a real install button via `beforeinstallprompt`; iOS gets "Share → Add to Home Screen" steps. "Not now" hides it for 7 days (localStorage `predzori-install-later`). The OG/Twitter tags use absolute `https://dimisko.github.io/viktor-nikolov-pred-zori/` URLs, so update them if the site moves. After changing `icons/*.svg`, re-render the PNGs (for example with headless Chrome `--screenshot`). Bump `CACHE` in `sw.js` when you add files to the shell list.
 - **Adding a document:** give it a unique `id`/`code` and good `kw` stems (lowercase and stemmed, since matching is a substring `includes`). If it arrives later, set `unlockAt` and `arrive`, and mention it in the Ilievski hints if it matters.

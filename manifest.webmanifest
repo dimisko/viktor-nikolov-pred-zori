@@ -1,0 +1,20 @@
+{
+  "name": "Пред зори — распит",
+  "short_name": "Пред зори",
+  "description": "Интерактивен распит: имаш време до 06:00 да дознаеш каде е Сара.",
+  "lang": "mk",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#28332B",
+  "theme_color": "#28332B",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
