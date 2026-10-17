@@ -21,7 +21,7 @@ icons/                  icon.svg (favicon: lamp over a suspect), icon-maskable.s
 og-image.png            1200x630 social preview referenced by the og:/twitter: tags
 config.js               window.PREDZORI_CONFIG = { apiUrl: "" }, the Worker URL for non-claude.ai hosting
 worker/src/index.js     Cloudflare Worker: CORS allowlist, validation, forwards to {BASE_URL}/chat/completions
-worker/wrangler.toml    BASE_URL (default Gemini OpenAI-compat), MODEL, MAX_TOKENS, ALLOWED_ORIGINS
+worker/wrangler.toml    BASE_URL (default Gemini OpenAI-compat), MODEL, MAX_TOKENS, REASONING_EFFORT, ALLOWED_ORIGINS
 worker/.dev.vars.example  API_KEY for local `wrangler dev` (real .dev.vars is gitignored)
 README.md               player and deployer docs
 ```
@@ -59,7 +59,7 @@ Everything lives in one `"use strict"` IIFE. Main pieces, top to bottom:
 
 - Allows only POST and OPTIONS. Checks the origin against `ALLOWED_ORIGINS` (comma list, `*` allowed).
 - Limits: body up to 120 KB, up to 40 messages, each message cut to 30k characters. Roles are cleaned to system/user/assistant.
-- Calls `${BASE_URL}/chat/completions` with `temperature: 0.8` and `max_tokens: MAX_TOKENS`, via `complete()`. If `MODEL` returns 429 or 5xx (Gemini often answers 503 "high demand"), it retries once with `FALLBACK_MODEL`.
+- Calls `${BASE_URL}/chat/completions` with `temperature: 0.8`, `max_tokens: MAX_TOKENS` and, if set, `reasoning_effort: REASONING_EFFORT`, via `complete()`. Gemini's thinking tokens count against `max_tokens`; without `REASONING_EFFORT = "low"` the Ilievski hints used ~1400 of 1500 tokens thinking and came back cut mid-sentence (`finish_reason: length`). If `MODEL` returns 429 or 5xx (Gemini often answers 503 "high demand"), it retries once with `FALLBACK_MODEL`.
 - Deployed at `https://pred-zori-api.pred-zori-api.workers.dev` (set in `config.js`). `MODEL = gemini-3.8-flash`, `FALLBACK_MODEL = gemini-3.5-flash-lite`, `ALLOWED_ORIGINS` = `https://viktor-nikolov-pred-zori.vercel.app` and plus localhost:8000. Gemini retires old models for new keys, so if calls start returning 404, list the available models and update `MODEL`.
 - Error codes (`rate_limited`, `upstream_error`, `empty_completion`, `prompt_too_large`, `forbidden_origin`, `bad_request`, `server_not_configured`) must stay in sync with `errCopy()` in `index.html`.
 - History is capped at 24 turns plus RULES, which keeps requests under `MAX_MESSAGES = 40`. Keep that true if you change either limit.

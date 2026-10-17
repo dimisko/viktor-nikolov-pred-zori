@@ -9,7 +9,11 @@ BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 MODEL = "gemini-3.8-flash"
 # Used once when MODEL is busy (503) or rate-limited (429). Leave empty to disable.
 FALLBACK_MODEL = "gemini-3.5-flash-lite"
-MAX_TOKENS = "1500"
+# Thinking models (Gemini 2.5+/3) count hidden reasoning tokens against this limit, so keep headroom.
+MAX_TOKENS = "4000"
+# Caps hidden "thinking" so it can't use up MAX_TOKENS and cut replies mid-sentence.
+# Gemini 3 accepts low/medium/high (not minimal). Leave empty for providers that reject the parameter.
+REASONING_EFFORT = "low"
 # Comma-separated list of sites allowed to call this worker. Replace YOUR-USERNAME.
 ALLOWED_ORIGINS = "https://dimisko.github.io,https://viktor-nikolov-pred-zori.vercel.app,http://localhost:8000"
 

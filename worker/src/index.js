@@ -71,7 +71,8 @@ async function complete(env, model, messages) {
         model,
         messages,
         temperature: 0.8,
-        max_tokens: Number(env.MAX_TOKENS || 1500),
+        max_tokens: Number(env.MAX_TOKENS || 4000),
+        ...(env.REASONING_EFFORT ? { reasoning_effort: env.REASONING_EFFORT } : {}),
       }),
     });
   } catch {
