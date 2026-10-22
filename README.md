@@ -15,17 +15,21 @@ The game itself is in Macedonian; the code, comments and documentation are in En
 
 ## How it works
 
-The whole game is a single static page, `index.html`, with no build step.
+The game is a static site with no build step: `index.html`, one stylesheet and plain JavaScript modules.
 
 - **Case file as a knowledge base (RAG).** The dossier documents (`DOCS`) are searched by keyword on every question. The most relevant ones, plus any document the player shows, are added to the suspect's prompt so he can tell real evidence from bluffs.
 - **Suspect prompt (`RULES`).** Holds the suspect's character, the hidden truth, and the rules for when each secret may be revealed. The model replies in Macedonian, then adds a JSON line with its resistance, newly revealed secrets and mood, which drives the UI.
 - **Hint prompt (`ilievskiInput`).** Gives the superior the current state and transcript so he can suggest one next step without spoiling the answer.
-- **One AI function (`askAI`).** Inside claude.ai the game uses the player's own Claude account. Anywhere else it calls the proxy set in `config.js`.
+- **One AI function (`askAI`).** It calls the proxy set in `config.js` and streams the reply in as it is written.
 - Progress is saved in the browser's `localStorage`.
 
 ```
-index.html          the game (HTML, CSS, JS in one file)
+index.html          the page markup
+css/style.css       styles
+js/                 game engine: state, flow, rendering, AI calls, parsing
+  story/            the case: documents, secrets, prompts, opening and endings
 config.js           apiUrl of your proxy
+serve.py            local dev server
 worker/             Cloudflare Worker that hides your API key
   src/index.js      forwards requests to any OpenAI-compatible API
   wrangler.toml     provider, model and allowed origins
@@ -71,9 +75,11 @@ Push the repository, then in **Settings → Pages** choose **Deploy from a branc
 ## Run locally
 
 ```bash
-python3 -m http.server 8000
+python serve.py
 # open http://localhost:8000
 ```
+
+Use `serve.py` rather than `python -m http.server`: on Windows the stock server often sends `.js` files as plain text, and the browser then refuses to load the game's modules. Opening `index.html` directly from disk doesn't work either.
 
 To test the worker locally, copy `worker/.dev.vars.example` to `worker/.dev.vars`, add your key, run `npm run dev` in `worker/`, and set `apiUrl` to `http://localhost:8787`.
 
@@ -83,12 +89,12 @@ Free API tiers have per-minute and per-day limits shared by all your players. Wh
 
 ## Make your own case
 
-Everything about the story lives near the top of the script in `index.html`:
+Everything about the story lives in `js/story/`, plus the intro brief in `index.html`:
 
-- `DOCS`: the case file (title, text, retrieval keywords, and `unlockAt` in minutes after midnight).
-- `SECRETS`: the truths the player must uncover.
-- `RULES`: the suspect's character, hidden truth and reveal conditions.
-- `ilievskiInput()`: the mentor's advice rules.
+- `docs.js`, `DOCS`: the case file (title, text, retrieval keywords, and `unlockAt` in minutes after midnight).
+- `secrets.js`, `SECRETS`: the truths the player must uncover.
+- `prompts.js`, `RULES`: the suspect's character, hidden truth and reveal conditions; `ilievskiInput()`: the mentor's advice rules.
+- `scenes.js`: the opening scene and the three endings.
 
 ## License
 
