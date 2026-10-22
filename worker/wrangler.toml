@@ -9,6 +9,12 @@ BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
 MODEL = "gemini-3.8-flash"
 # Used once when MODEL is busy (503) or rate-limited (429). Leave empty to disable.
 FALLBACK_MODEL = "gemini-3.5-flash-lite"
+# Milliseconds to wait for the first response from MODEL before switching to FALLBACK_MODEL,
+# how long the fallback gets, and the longest pause allowed mid-stream before giving up.
+# The game itself gives up after 50 s without any data, so keep TIMEOUT_MS + FALLBACK_TIMEOUT_MS below that.
+TIMEOUT_MS = "15000"
+FALLBACK_TIMEOUT_MS = "25000"
+IDLE_TIMEOUT_MS = "20000"
 # Thinking models (Gemini 2.5+/3) count hidden reasoning tokens against this limit, so keep headroom.
 MAX_TOKENS = "4000"
 # Caps hidden "thinking" so it can't use up MAX_TOKENS and cut replies mid-sentence.

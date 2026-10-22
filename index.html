@@ -483,18 +483,45 @@ async function askAI(input, opts) {
     let messages;
     if (typeof input === "string") messages = [{ role: "user", content: input }];
     else messages = input.map((m, i) => ({ role: i === 0 && m.content === RULES ? "system" : m.role, content: m.content }));
-    let res;
+    /* give up if no data arrives for a while: 50 s for the first byte (Worker main + fallback), 30 s between chunks */
+    const ctl = new AbortController(); let timer;
+    const arm = ms => { clearTimeout(timer); timer = setTimeout(() => ctl.abort(), ms); };
+    if (opts.signal) opts.signal.addEventListener("abort", () => ctl.abort());
+    arm(50000);
     try {
-      res = await fetch(CONFIG.apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }), signal: opts.signal });
-    } catch (e) { throw { code: "upstream_error" }; }
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw { code: res.status === 429 ? "rate_limited" : (data.error || "upstream_error") };
-    const text = String(data.text || "").trim();
-    if (!text) throw { code: "empty_completion" };
-    if (opts.onText) opts.onText({ text, delta: text });
-    return text;
+      const res = await fetch(CONFIG.apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages, stream: true }), signal: ctl.signal });
+      if (/ndjson/.test(res.headers.get("Content-Type") || "")) return await readStream(res, opts.onText, () => arm(30000));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw { code: res.status === 429 ? "rate_limited" : (data.error || "upstream_error") };
+      const text = String(data.text || "").trim();
+      if (!text) throw { code: "empty_completion" };
+      if (opts.onText) opts.onText({ text, delta: text });
+      return text;
+    } catch (e) { throw e && e.code ? e : { code: "upstream_error" }; }
+    finally { clearTimeout(timer); }
   }
   throw { code: "unavailable" };
+}
+/* reads the Worker's NDJSON stream: {"t": delta} lines, or {"error": code} */
+async function readStream(res, onText, tick) {
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "", text = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    tick(); buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+      if (!l) continue;
+      const m = JSON.parse(l);
+      if (m.error) throw { code: m.error };
+      if (m.t) { text += m.t; if (onText) onText({ text, delta: m.t }); }
+    }
+  }
+  text = text.trim();
+  if (!text) throw { code: "empty_completion" };
+  return text;
 }
 function errCopy(e) {
   const c = e && e.code;
