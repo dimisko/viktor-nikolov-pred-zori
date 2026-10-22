@@ -21,8 +21,8 @@ icons/                  icon.svg (favicon: lamp over a suspect), icon-maskable.s
 og-image.png            1200x630 social preview referenced by the og:/twitter: tags
 config.js               window.PREDZORI_CONFIG = { apiUrl: "" }, the Worker URL for non-claude.ai hosting
 worker/src/index.js     Cloudflare Worker: CORS allowlist, validation, forwards to {BASE_URL}/chat/completions
-worker/wrangler.toml    BASE_URL (default Gemini OpenAI-compat), MODEL, MAX_TOKENS, REASONING_EFFORT, ALLOWED_ORIGINS
-worker/.dev.vars.example  API_KEY for local `wrangler dev` (real .dev.vars is gitignored)
+worker/wrangler.toml    BASE_URL (default Gemini OpenAI-compat), MODEL, FALLBACK_* (default Groq), timeouts, MAX_TOKENS, REASONING_EFFORT, ALLOWED_ORIGINS
+worker/.dev.vars.example  API_KEY (and FALLBACK_API_KEY) for local `wrangler dev` (real .dev.vars is gitignored)
 README.md               player and deployer docs
 ```
 
@@ -30,7 +30,7 @@ README.md               player and deployer docs
 
 - Game locally: `python -m http.server 8000` from the repo root, then open http://localhost:8000. With `apiUrl` empty and not inside claude.ai, the AI shows as unavailable (expected).
 - Worker locally: `cd worker && npm install && npm run dev` (serves on :8787), then set `apiUrl: "http://localhost:8787"` in `config.js`. Needs `worker/.dev.vars` with `API_KEY=...`.
-- Worker deploy: `npx wrangler secret put API_KEY`, then `npm run deploy`.
+- Worker deploy: `npx wrangler secret put API_KEY` (and `FALLBACK_API_KEY` when `FALLBACK_BASE_URL` is set), then `npm run deploy`.
 - There are no tests or linters. Verify changes by playing in a browser.
 
 ## Architecture of the game script (`index.html`)
@@ -59,8 +59,8 @@ Everything lives in one `"use strict"` IIFE. Main pieces, top to bottom:
 
 - Allows only POST and OPTIONS. Checks the origin against `ALLOWED_ORIGINS` (comma list, `*` allowed).
 - Limits: body up to 120 KB, up to 40 messages, each message cut to 30k characters. Roles are cleaned to system/user/assistant.
-- Calls `${BASE_URL}/chat/completions` with `temperature: 0.8`, `max_tokens: MAX_TOKENS` and, if set, `reasoning_effort: REASONING_EFFORT`, via `complete()`. Gemini's thinking tokens count against `max_tokens`; without `REASONING_EFFORT = "low"` the Ilievski hints used ~1400 of 1500 tokens thinking and came back cut mid-sentence (`finish_reason: length`). If `MODEL` returns 429 or 5xx (Gemini often answers 503 "high demand") or sends nothing within `TIMEOUT_MS` (15 s), it retries once with `FALLBACK_MODEL` (`FALLBACK_TIMEOUT_MS`, 25 s). With `stream: true` in the body, `streamReply()` turns the provider's SSE into NDJSON and aborts if the stream stalls for `IDLE_TIMEOUT_MS`. Keep `TIMEOUT_MS + FALLBACK_TIMEOUT_MS` below the browser's 50 s first-byte limit in `askAI()`.
-- Deployed at `https://pred-zori-api.pred-zori-api.workers.dev` (set in `config.js`). Provider is Groq (`BASE_URL = https://api.groq.com/openai/v1`), `MODEL = openai/gpt-oss-120b`, `FALLBACK_MODEL = openai/gpt-oss-20b`; it moved off Gemini because `gemini-3.8-flash` took 60-90+ s to answer (Oct 2026). `ALLOWED_ORIGINS` = `https://viktor-nikolov-pred-zori.vercel.app` and plus localhost:8000. Providers retire models, so if calls start returning 404, list the available models (`GET {BASE_URL}/models`) and update `MODEL`.
+- Calls `${BASE_URL}/chat/completions` with `temperature: 0.8`, `max_tokens: MAX_TOKENS` and, if set, `reasoning_effort: REASONING_EFFORT`, via `complete()`. Gemini's thinking tokens count against `max_tokens`; without `REASONING_EFFORT = "low"` the Ilievski hints used ~1400 of 1500 tokens thinking and came back cut mid-sentence (`finish_reason: length`). If `MODEL` returns 429 or 5xx (Gemini often answers 503 "high demand") or sends nothing within `TIMEOUT_MS` (15 s), it retries once with `FALLBACK_MODEL` (`FALLBACK_TIMEOUT_MS`, 25 s). The fallback uses the main provider (`BASE_URL`, `API_KEY`, `REASONING_EFFORT`) unless `FALLBACK_BASE_URL` is set; then it uses `FALLBACK_BASE_URL`, the `FALLBACK_API_KEY` secret and `FALLBACK_REASONING_EFFORT`, and a missing `FALLBACK_API_KEY` returns `server_not_configured`. With `stream: true` in the body, `streamReply()` turns the provider's SSE into NDJSON and aborts if the stream stalls for `IDLE_TIMEOUT_MS`. Keep `TIMEOUT_MS + FALLBACK_TIMEOUT_MS` below the browser's 50 s first-byte limit in `askAI()`.
+- Deployed at `https://pred-zori-api.pred-zori-api.workers.dev` (set in `config.js`). Main: Gemini `MODEL = gemini-3.5-flash-lite` (`gemini-3.8-flash` took 60-90+ s to answer in Oct 2026 tests, flash-lite under 1 s). Fallback: Groq (`FALLBACK_BASE_URL = https://api.groq.com/openai/v1`), `FALLBACK_MODEL = openai/gpt-oss-120b`. `ALLOWED_ORIGINS` = `https://viktor-nikolov-pred-zori.vercel.app` and plus localhost:8000. Providers retire models, so if calls start returning 404, list the available models (`GET {BASE_URL}/models`) and update `MODEL`.
 - Error codes (`rate_limited`, `upstream_error`, `empty_completion`, `prompt_too_large`, `forbidden_origin`, `bad_request`, `server_not_configured`) must stay in sync with `errCopy()` in `index.html`.
 - History is capped at 24 turns plus RULES, which keeps requests under `MAX_MESSAGES = 40`. Keep that true if you change either limit.
 

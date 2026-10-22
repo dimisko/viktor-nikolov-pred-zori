@@ -37,7 +37,7 @@ You need a free API key and a free Cloudflare account. The key stays in the work
 
 ### 1. Get an API key
 
-The default is Groq: create a key in the [Groq console](https://console.groq.com/keys). Any OpenAI-compatible provider works, for example Google Gemini (`BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"`, key from [Google AI Studio](https://aistudio.google.com/)) or OpenRouter. Change `BASE_URL` and `MODEL` in `worker/wrangler.toml` to match, and check the provider's docs for the current free model name. Macedonian quality differs a lot between models, so test a few.
+By default the main model is Google Gemini (key from [Google AI Studio](https://aistudio.google.com/)) and the fallback, used when Gemini is busy or slow, is Groq (key from the [Groq console](https://console.groq.com/keys)). Any OpenAI-compatible provider works, for example OpenRouter. Change `BASE_URL` and `MODEL` in `worker/wrangler.toml` to match, and check the provider's docs for the current free model name. For a fallback on the same provider, leave `FALLBACK_BASE_URL` empty; to disable it, leave `FALLBACK_MODEL` empty. Macedonian quality differs a lot between models, so test a few.
 
 ### 2. Deploy the worker
 
@@ -45,7 +45,8 @@ The default is Groq: create a key in the [Groq console](https://console.groq.com
 cd worker
 npm install
 npx wrangler login
-npx wrangler secret put API_KEY     # paste your key
+npx wrangler secret put API_KEY            # paste the main provider's key
+npx wrangler secret put FALLBACK_API_KEY   # only if FALLBACK_BASE_URL is set: the fallback provider's key
 npm run deploy
 ```
 

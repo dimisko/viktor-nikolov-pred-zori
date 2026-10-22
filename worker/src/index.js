@@ -3,6 +3,8 @@
 // OpenAI-compatible endpoint (Google Gemini, Groq, OpenRouter, ...).
 // Configure BASE_URL, MODEL and ALLOWED_ORIGINS in wrangler.toml,
 // and set the key with:  npx wrangler secret put API_KEY
+// The optional fallback can use the same provider, or another one via FALLBACK_BASE_URL
+// (then also: npx wrangler secret put FALLBACK_API_KEY).
 
 const MAX_BODY_BYTES = 120_000;
 const MAX_MESSAGES = 40;
@@ -26,7 +28,16 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     if (request.method !== "POST") return reply({ error: "method_not_allowed" }, 405, cors);
     if (!originOk) return reply({ error: "forbidden_origin" }, 403, cors);
-    if (!env.API_KEY) return reply({ error: "server_not_configured" }, 500, cors);
+    const main = { url: env.BASE_URL, key: env.API_KEY, model: env.MODEL, effort: env.REASONING_EFFORT };
+    // Without FALLBACK_BASE_URL the fallback uses the main provider (URL, key, reasoning effort).
+    const other = !!env.FALLBACK_BASE_URL;
+    const fallback = env.FALLBACK_MODEL ? {
+      url: other ? env.FALLBACK_BASE_URL : env.BASE_URL,
+      key: other ? env.FALLBACK_API_KEY : env.API_KEY,
+      model: env.FALLBACK_MODEL,
+      effort: other ? env.FALLBACK_REASONING_EFFORT : env.REASONING_EFFORT,
+    } : null;
+    if (!main.key || (fallback && !fallback.key)) return reply({ error: "server_not_configured" }, 500, cors);
 
     const raw = await request.text();
     if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return reply({ error: "prompt_too_large" }, 413, cors);
@@ -45,10 +56,10 @@ export default {
 
     const stream = body.stream === true;
     const mainMs = Number(env.TIMEOUT_MS || 15000);
-    let upstream = await complete(env, env.MODEL, clean, stream, mainMs);
+    let upstream = await complete(env, main, clean, stream, mainMs);
     // Busy, rate-limited or too slow main model: retry once with the fallback model, if one is set.
-    if (env.FALLBACK_MODEL && (!upstream || upstream.res.status === 429 || upstream.res.status >= 500)) {
-      upstream = await complete(env, env.FALLBACK_MODEL, clean, stream, Number(env.FALLBACK_TIMEOUT_MS || 25000));
+    if (fallback && (!upstream || upstream.res.status === 429 || upstream.res.status >= 500)) {
+      upstream = await complete(env, fallback, clean, stream, Number(env.FALLBACK_TIMEOUT_MS || 25000));
     }
     if (!upstream) return reply({ error: "upstream_error" }, 502, cors);
 
@@ -68,20 +79,21 @@ export default {
 
 // Resolves to { res, ctl } once response headers arrive, or null on network error / timeout.
 // ctl stays usable so a stalled stream can be aborted later.
-async function complete(env, model, messages, stream, ms) {
+// p: { url, key, model, effort } of one provider.
+async function complete(env, p, messages, stream, ms) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const res = await fetch(`${env.BASE_URL.replace(/\/$/, "")}/chat/completions`, {
+    const res = await fetch(`${p.url.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.API_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.key}` },
       body: JSON.stringify({
-        model,
+        model: p.model,
         messages,
         temperature: 0.8,
         max_tokens: Number(env.MAX_TOKENS || 4000),
         ...(stream ? { stream: true } : {}),
-        ...(env.REASONING_EFFORT ? { reasoning_effort: env.REASONING_EFFORT } : {}),
+        ...(p.effort ? { reasoning_effort: p.effort } : {}),
       }),
       signal: ctl.signal,
     });
