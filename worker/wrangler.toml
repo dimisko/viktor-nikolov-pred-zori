@@ -3,22 +3,27 @@ main = "src/index.js"
 compatibility_date = "2026-09-01"
 
 [vars]
-# Any OpenAI-compatible endpoint. Default: Google Gemini (free tier via Google AI Studio).
-BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
-# Check your provider's docs for the current free model name.
-MODEL = "gemini-3.8-flash"
-# Used once when MODEL is busy (503) or rate-limited (429). Leave empty to disable.
-FALLBACK_MODEL = "gemini-3.5-flash-lite"
+# Any OpenAI-compatible endpoint. Current: Groq (fast inference, free tier via console.groq.com).
+# API_KEY must be a key for this provider.
+BASE_URL = "https://api.groq.com/openai/v1"
+# Check your provider's docs for the current model names (Groq: console.groq.com/docs/models).
+MODEL = "openai/gpt-oss-120b"
+# Used once when MODEL is busy (5xx), rate-limited (429) or too slow (TIMEOUT_MS). Leave empty to disable.
+FALLBACK_MODEL = "openai/gpt-oss-20b"
+# To switch back to Google Gemini (with a Gemini API_KEY):
+#   BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+#   MODEL = "gemini-3.5-flash-lite"   (gemini-3.8-flash took 60-90+ s to answer in Oct 2026 tests)
+#   FALLBACK_MODEL = ""
 # Milliseconds to wait for the first response from MODEL before switching to FALLBACK_MODEL,
 # how long the fallback gets, and the longest pause allowed mid-stream before giving up.
 # The game itself gives up after 50 s without any data, so keep TIMEOUT_MS + FALLBACK_TIMEOUT_MS below that.
 TIMEOUT_MS = "15000"
 FALLBACK_TIMEOUT_MS = "25000"
 IDLE_TIMEOUT_MS = "20000"
-# Thinking models (Gemini 2.5+/3) count hidden reasoning tokens against this limit, so keep headroom.
+# Reasoning models (gpt-oss, Gemini 2.5+/3) count hidden reasoning tokens against this limit, so keep headroom.
 MAX_TOKENS = "4000"
-# Caps hidden "thinking" so it can't use up MAX_TOKENS and cut replies mid-sentence.
-# Gemini 3 accepts low/medium/high (not minimal). Leave empty for providers that reject the parameter.
+# Caps hidden "thinking" so it can't use up MAX_TOKENS and cut replies mid-sentence. It is sent to both
+# MODEL and FALLBACK_MODEL. gpt-oss and Gemini 3 accept low/medium/high. Leave empty for models that reject it.
 REASONING_EFFORT = "low"
 # Comma-separated list of sites allowed to call this worker. Replace YOUR-USERNAME.
 ALLOWED_ORIGINS = "https://dimisko.github.io,https://viktor-nikolov-pred-zori.vercel.app,http://localhost:8000"

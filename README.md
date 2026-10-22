@@ -37,7 +37,7 @@ You need a free API key and a free Cloudflare account. The key stays in the work
 
 ### 1. Get an API key
 
-The default is Google Gemini: create a key in [Google AI Studio](https://aistudio.google.com/). Any OpenAI-compatible provider works, for example Groq (`BASE_URL = "https://api.groq.com/openai/v1"`) or OpenRouter. Change `BASE_URL` and `MODEL` in `worker/wrangler.toml` to match, and check the provider's docs for the current free model name. Macedonian quality differs a lot between models, so test a few.
+The default is Groq: create a key in the [Groq console](https://console.groq.com/keys). Any OpenAI-compatible provider works, for example Google Gemini (`BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"`, key from [Google AI Studio](https://aistudio.google.com/)) or OpenRouter. Change `BASE_URL` and `MODEL` in `worker/wrangler.toml` to match, and check the provider's docs for the current free model name. Macedonian quality differs a lot between models, so test a few.
 
 ### 2. Deploy the worker
 
