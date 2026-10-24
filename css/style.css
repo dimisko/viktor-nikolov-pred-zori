@@ -116,6 +116,8 @@ h1{font-size:clamp(2.3rem,10vw,3.4rem);line-height:1.05;margin:0;text-align:cent
 .row{display:flex;gap:8px;align-items:flex-end}
 textarea{flex:1;min-width:0;resize:none;padding:11px 12px;border-radius:6px;border:1px solid var(--wall-line);background:var(--paper);color:var(--ink);font-size:1rem;line-height:1.35;max-height:132px}
 .row button{min-height:46px}
+.row[hidden],#finishBtn[hidden]{display:none}
+.composer #finishBtn{margin-top:0}
 #blocked{font-size:.85rem;color:var(--lamp);margin:0 0 8px;line-height:1.4}
 #blocked[hidden]{display:none}
 

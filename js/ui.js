@@ -36,7 +36,9 @@ export function renderStatus() {
   const left = Math.max(0, END - S.t);
   $("left").textContent = "до 06:00: " + Math.floor(left / 60) + ":" + pad(left % 60);
   $("hintsLeft").textContent = S.hints;
-  $("hintBtn").disabled = busy || S.hints <= 0;
+  $("hintBtn").disabled = busy || S.hints <= 0 || !!S.outcome;
+  $("composerRow").hidden = !!S.outcome;
+  $("finishBtn").hidden = !S.outcome;
   $("hintBtn").setAttribute("aria-label", "Јави се на Илиевски, преостанати повици: " + S.hints);
   $("resVal").textContent = S.res;
   $("meterFill").style.width = S.res + "%";
@@ -81,7 +83,7 @@ export function addLive(kind, speaker, waiting) {
 export function setBusy(b) {
   busy = b;
   $("sendBtn").disabled = b; $("showBtn").disabled = b;
-  $("hintBtn").disabled = b || S.hints <= 0;
+  $("hintBtn").disabled = b || S.hints <= 0 || !!S.outcome;
   $("sendBtn").textContent = b ? "…" : "Прашај";
 }
 

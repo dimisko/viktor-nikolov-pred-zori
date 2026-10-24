@@ -1,6 +1,6 @@
 /* Entry point: wires the DOM events and renders the first screen. */
 import { setS, load } from "./state.js";
-import { startGame, restart, send, hint } from "./game.js";
+import { startGame, restart, send, hint, finish } from "./game.js";
 import { render, setPending, openSheet, closeSheet, autosize } from "./ui.js";
 import { initPWA, hideInstall } from "./pwa.js";
 import { $ } from "./util.js";
@@ -12,6 +12,7 @@ $("sendBtn").addEventListener("click", send);
 $("input").addEventListener("input", autosize);
 $("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
 $("hintBtn").addEventListener("click", hint);
+$("finishBtn").addEventListener("click", finish);
 $("dossierBtn").addEventListener("click", openSheet);
 $("showBtn").addEventListener("click", openSheet);
 $("pendingX").addEventListener("click", () => setPending(null));

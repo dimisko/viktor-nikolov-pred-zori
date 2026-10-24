@@ -33,11 +33,14 @@ function checkEnd() {
   if (S.revealed.includes("location")) S.outcome = "win";
   else if (S.lawyer) S.outcome = "lawyer";
   else if (S.t >= END) S.outcome = "time";
-  if (S.outcome) { S.phase = "end"; S.endAt = Math.min(S.t, END); }
+  if (S.outcome) S.endAt = Math.min(S.t, END);
 }
 
+/* the game stays on the transcript after an outcome so the last reply can be read; this moves to the end screen */
+export function finish() { if (!S.outcome) return; S.phase = "end"; save(); render(); }
+
 export async function send() {
-  if (busy || S.phase !== "play") return;
+  if (busy || S.phase !== "play" || S.outcome) return;
   const text = $("input").value.trim();
   const doc = pendingDoc ? DOCS.find(d => d.id === pendingDoc) : null;
   if (!text && !doc) { $("input").focus(); return; }
@@ -72,7 +75,7 @@ export async function send() {
 }
 
 export async function hint() {
-  if (busy || S.phase !== "play" || S.hints <= 0) return;
+  if (busy || S.phase !== "play" || S.outcome || S.hints <= 0) return;
   if (!aiReady) { toast(errCopy({ code: "unavailable" })); return; }
   const snapshot = JSON.stringify(S);
   const input = ilievskiInput();

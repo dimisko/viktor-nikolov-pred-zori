@@ -1,6 +1,6 @@
 // Network-first service worker: always serves the latest version when online,
 // falls back to the cached copy offline. AI calls go to the Worker (cross-origin POST) and are never cached.
-const CACHE = "predzori-shell-v2";
+const CACHE = "predzori-shell-v3";
 const SHELL = ["./", "index.html", "config.js", "css/style.css",
   "js/main.js", "js/state.js", "js/game.js", "js/ui.js", "js/ai.js", "js/parse.js", "js/retrieval.js", "js/pwa.js", "js/util.js",
   "js/story/docs.js", "js/story/secrets.js", "js/story/prompts.js", "js/story/scenes.js",
